@@ -110,6 +110,14 @@ export function useRoomConnection({ roomId, username, avatarSeed }: UseRoomConne
       const payload: JoinRoomPayload = { roomId, username, avatarSeed };
       socket.emit("room:join", payload);
     };
+    const onConnectError = (cause: Error) => {
+      setError(cause.message || "Could not connect to the sync server.");
+    };
+    const onDisconnect = (reason: string) => {
+      if (reason !== "io client disconnect") {
+        setError("Disconnected from the sync server.");
+      }
+    };
 
     socket.on("room:snapshot", onSnapshot);
     socket.on("playback:updated", onPlaybackUpdated);
@@ -119,6 +127,8 @@ export function useRoomConnection({ roomId, username, avatarSeed }: UseRoomConne
     socket.on("room:error", setError);
     socket.on("room:kicked", setError);
     socket.on("connect", joinRoom);
+    socket.on("connect_error", onConnectError);
+    socket.on("disconnect", onDisconnect);
 
     if (socket.connected) {
       joinRoom();
@@ -135,6 +145,8 @@ export function useRoomConnection({ roomId, username, avatarSeed }: UseRoomConne
       socket.off("room:error");
       socket.off("room:kicked");
       socket.off("connect", joinRoom);
+      socket.off("connect_error", onConnectError);
+      socket.off("disconnect", onDisconnect);
       socket.disconnect();
     };
   }, [avatarSeed, roomId, username]);
