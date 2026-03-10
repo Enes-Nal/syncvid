@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "concurrently \"npm run dev -w @syncweb/server\" \"npm run dev -w @syncweb/web\"",
     "build": "npm run build --workspaces",
+    "build:server": "npm run build -w @syncweb/shared && npm run build -w @syncweb/server",
     "lint": "npm run lint --workspaces",
     "typecheck": "npm run typecheck --workspaces"
   },

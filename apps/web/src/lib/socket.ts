@@ -16,12 +16,14 @@ function resolveServerUrl() {
     hostname === "127.0.0.1" ||
     hostname === "[::1]";
 
-  return isLocalHost ? "http://localhost:4000" : origin;
+  return isLocalHost ? "http://localhost:4000" : null;
 }
 
 const serverUrl = resolveServerUrl();
 
-export const socket = io(serverUrl, {
-  autoConnect: false,
-  transports: ["polling", "websocket"]
-});
+export const socket = serverUrl
+  ? io(serverUrl, {
+      autoConnect: false,
+      transports: ["polling", "websocket"]
+    })
+  : null;

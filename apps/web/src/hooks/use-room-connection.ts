@@ -56,6 +56,13 @@ export function useRoomConnection({ roomId, username, avatarSeed }: UseRoomConne
   }, [playback]);
 
   useEffect(() => {
+    if (!socket) {
+      setError("Missing VITE_SERVER_URL. Deploy the sync server and point the web app to it.");
+      return;
+    }
+
+    const activeSocket = socket;
+
     const onSnapshot = (next: RoomSnapshot) => {
       setSnapshot(next);
       setUsers(next.users);
@@ -108,7 +115,7 @@ export function useRoomConnection({ roomId, username, avatarSeed }: UseRoomConne
     };
     const joinRoom = () => {
       const payload: JoinRoomPayload = { roomId, username, avatarSeed };
-      socket.emit("room:join", payload);
+      activeSocket.emit("room:join", payload);
     };
     const onConnectError = (cause: Error) => {
       setError(cause.message || "Could not connect to the sync server.");
@@ -119,35 +126,35 @@ export function useRoomConnection({ roomId, username, avatarSeed }: UseRoomConne
       }
     };
 
-    socket.on("room:snapshot", onSnapshot);
-    socket.on("playback:updated", onPlaybackUpdated);
-    socket.on("playlist:updated", onPlaylistUpdated);
-    socket.on("room:user-joined", onUserJoined);
-    socket.on("room:user-left", onUserLeft);
-    socket.on("room:error", setError);
-    socket.on("room:kicked", setError);
-    socket.on("connect", joinRoom);
-    socket.on("connect_error", onConnectError);
-    socket.on("disconnect", onDisconnect);
+    activeSocket.on("room:snapshot", onSnapshot);
+    activeSocket.on("playback:updated", onPlaybackUpdated);
+    activeSocket.on("playlist:updated", onPlaylistUpdated);
+    activeSocket.on("room:user-joined", onUserJoined);
+    activeSocket.on("room:user-left", onUserLeft);
+    activeSocket.on("room:error", setError);
+    activeSocket.on("room:kicked", setError);
+    activeSocket.on("connect", joinRoom);
+    activeSocket.on("connect_error", onConnectError);
+    activeSocket.on("disconnect", onDisconnect);
 
-    if (socket.connected) {
+    if (activeSocket.connected) {
       joinRoom();
     } else {
-      socket.connect();
+      activeSocket.connect();
     }
 
     return () => {
-      socket.off("room:snapshot", onSnapshot);
-      socket.off("playback:updated", onPlaybackUpdated);
-      socket.off("playlist:updated", onPlaylistUpdated);
-      socket.off("room:user-joined", onUserJoined);
-      socket.off("room:user-left", onUserLeft);
-      socket.off("room:error");
-      socket.off("room:kicked");
-      socket.off("connect", joinRoom);
-      socket.off("connect_error", onConnectError);
-      socket.off("disconnect", onDisconnect);
-      socket.disconnect();
+      activeSocket.off("room:snapshot", onSnapshot);
+      activeSocket.off("playback:updated", onPlaybackUpdated);
+      activeSocket.off("playlist:updated", onPlaylistUpdated);
+      activeSocket.off("room:user-joined", onUserJoined);
+      activeSocket.off("room:user-left", onUserLeft);
+      activeSocket.off("room:error");
+      activeSocket.off("room:kicked");
+      activeSocket.off("connect", joinRoom);
+      activeSocket.off("connect_error", onConnectError);
+      activeSocket.off("disconnect", onDisconnect);
+      activeSocket.disconnect();
     };
   }, [avatarSeed, roomId, username]);
 
@@ -159,29 +166,50 @@ export function useRoomConnection({ roomId, username, avatarSeed }: UseRoomConne
     playback,
     error,
     sendPlay: (positionSeconds: number, playbackRate = 1) => {
+      if (!socket) {
+        return;
+      }
       const payload: PlayCommand = { roomId, positionSeconds, playbackRate, issuedAt: Date.now() };
       socket.emit("playback:play", payload);
     },
     sendPause: (positionSeconds: number) => {
+      if (!socket) {
+        return;
+      }
       const payload: PauseCommand = { roomId, positionSeconds, issuedAt: Date.now() };
       socket.emit("playback:pause", payload);
     },
     sendSeek: (positionSeconds: number) => {
+      if (!socket) {
+        return;
+      }
       const payload: SeekCommand = { roomId, positionSeconds, issuedAt: Date.now() };
       socket.emit("playback:seek", payload);
     },
     reportDrift: (positionSeconds: number) => {
+      if (!socket) {
+        return;
+      }
       const payload: DriftReport = { roomId, positionSeconds, reportedAt: Date.now() };
       socket.emit("playback:drift", payload);
     },
     addPlaylistItem: (url: string) => {
+      if (!socket) {
+        return;
+      }
       const payload: PlaylistAddCommand = { roomId, url };
       socket.emit("playlist:add", payload);
     },
     removePlaylistItem: (playlistItemId: string) => {
+      if (!socket) {
+        return;
+      }
       socket.emit("playlist:remove", { roomId, playlistItemId });
     },
     advancePlaylist: () => {
+      if (!socket) {
+        return;
+      }
       const payload: PlaybackCommand = { roomId, issuedAt: Date.now() };
       socket.emit("playlist:advance", payload);
     }
