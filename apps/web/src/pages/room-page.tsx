@@ -14,6 +14,7 @@ import type { UnifiedPlayerAdapter } from "../players/types";
 import { PlayerContainer } from "../components/player-container";
 import { PlaylistPanel } from "../components/playlist-panel";
 import { RoomSidebar } from "../components/room-sidebar";
+import { SparklesText } from "../components/ui/sparkles-text";
 import { usePlayerSync } from "../hooks/use-player-sync";
 import { useRoomConnection } from "../hooks/use-room-connection";
 
@@ -112,10 +113,12 @@ export function RoomPage() {
   return (
     <main className="layout">
       <header className="room-topbar">
-        <div className="room-topbar-copy">
-          <span className="room-topbar-label">Room</span>
-          <strong>{roomName}</strong>
-        </div>
+        <SparklesText
+          text="{syncweb}"
+          sparklesCount={4}
+          colors={{ first: "#4554FF", second: "#7C86FF" }}
+          className="room-brand"
+        />
         <ProfileMenu
           avatarSeed={profile.avatarSeed}
           username={profile.username}

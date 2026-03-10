@@ -1,42 +1,71 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-
+import { CloseIconButton } from "@/components/ui/close-icon-button";
 import { cn } from "@/lib/utils";
 
 interface TagProps {
   id: string;
   text: string;
+  removable: boolean;
   onRemove: () => void;
 }
 
-const Tag = ({ id, text, onRemove }: TagProps) => {
+const Tag = ({ id, text, removable, onRemove }: TagProps) => {
+  const [isRemoving, setIsRemoving] = useState(false);
+  const timeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current !== null) {
+        window.clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleRemove = () => {
+    if (isRemoving) {
+      return;
+    }
+
+    setIsRemoving(true);
+    timeoutRef.current = window.setTimeout(() => {
+      onRemove();
+      timeoutRef.current = null;
+    }, 220);
+  };
+
   return (
     <motion.span
-      initial={{ opacity: 0, scale: 0.8, y: -10, filter: "blur(10px)" }}
-      animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
-      exit={{ opacity: 0, scale: 0.8, y: -10, filter: "blur(10px)" }}
+      layout
+      data-tag-id={id}
+      initial={{ opacity: 0, scale: 0.92, y: -8, filter: "blur(8px)" }}
+      animate={
+        isRemoving
+          ? { opacity: 0, scale: 0.94, y: -4, filter: "blur(6px)" }
+          : { opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }
+      }
+      exit={{ opacity: 0, scale: 0.94, y: -4, filter: "blur(6px)" }}
       transition={{
-        duration: 0.4,
+        duration: isRemoving ? 0.22 : 0.28,
         ease: "circInOut",
         type: "spring"
       }}
-      className="flex items-center gap-1 rounded-xl bg-[#11111198] px-2 py-1 text-sm text-white shadow-[0_0_10px_rgba(0,0,0,0.2)] backdrop-blur-sm"
+      className={cn(
+        "group flex w-full min-w-0 max-w-full items-center gap-3 rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(24,24,24,0.92),rgba(12,12,12,0.88))] px-3 py-2 text-sm text-white shadow-[0_12px_30px_rgba(0,0,0,0.28)] backdrop-blur-md transition-colors",
+        removable ? "hover:border-white/18" : "pr-3",
+        isRemoving ? "pointer-events-none" : null
+      )}
     >
-      {text}
-      <button
-        type="button"
-        onClick={onRemove}
-        className="inline-flex h-5 w-5 shrink-0 items-center justify-center self-center rounded-full border-0 bg-transparent p-0 text-white/65 transition-colors hover:bg-white/10 hover:text-white focus:outline-none"
-        style={{ border: "0", boxShadow: "none" }}
-        aria-label={`Remove ${text}`}
-        data-tag-id={id}
-      >
-        <span aria-hidden="true" className="text-sm leading-none">
-          &times;
-        </span>
-      </button>
+      <span className="min-w-0 flex-1 truncate text-[0.95rem] font-medium text-white/92">{text}</span>
+      {removable ? (
+        <CloseIconButton
+          className="h-7 w-7 shrink-0"
+          label={`Remove ${text}`}
+          onClick={handleRemove}
+        />
+      ) : null}
     </motion.span>
   );
 };
@@ -48,6 +77,7 @@ interface InputWithTagsProps {
   tags?: Array<string | { id: string; text: string }>;
   onTagAdd?: (tag: string) => boolean | void;
   onTagRemove?: (index: number, tag: string, id?: string) => void;
+  canRemoveTag?: (index: number, tag: { id: string; text: string }) => boolean;
 }
 
 const InputWithTags = ({
@@ -56,7 +86,8 @@ const InputWithTags = ({
   limit = 10,
   tags: controlledTags,
   onTagAdd,
-  onTagRemove
+  onTagRemove,
+  canRemoveTag
 }: InputWithTagsProps) => {
   const [internalTags, setInternalTags] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState("");
@@ -87,7 +118,7 @@ const InputWithTags = ({
   };
 
   return (
-    <div className={cn("flex w-full max-w-xl flex-col gap-2", className)}>
+    <div className={cn("flex w-full min-w-0 max-w-full flex-col gap-2 overflow-hidden", className)}>
       <motion.div
         initial={{ opacity: 0, scale: 0.9, filter: "blur(10px)" }}
         animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
@@ -105,11 +136,20 @@ const InputWithTags = ({
           disabled={typeof limit === "number" ? tags.length >= limit : false}
         />
       </motion.div>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex min-w-0 max-w-full flex-col gap-2 overflow-hidden">
         <AnimatePresence>
-          {tags.map((tag, index) => (
-            <Tag key={tag.id} id={tag.id} text={tag.text} onRemove={() => removeTag(index)} />
-          ))}
+          {tags.map((tag, index) => {
+            const removable = canRemoveTag?.(index, tag) ?? true;
+            return (
+              <Tag
+                key={tag.id}
+                id={tag.id}
+                text={tag.text}
+                removable={removable}
+                onRemove={() => removeTag(index)}
+              />
+            );
+          })}
         </AnimatePresence>
       </div>
     </div>

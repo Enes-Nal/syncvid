@@ -13,7 +13,7 @@ interface PlaylistPanelProps {
 
 export function PlaylistPanel({ items, isHost, onAdd, onRemove, onAdvance }: PlaylistPanelProps) {
   return (
-    <div className="glow-card-shell">
+    <div className="glow-card-shell playlist-panel-shell">
       <GlowingEffect
         spread={36}
         glow
@@ -22,7 +22,7 @@ export function PlaylistPanel({ items, isHost, onAdd, onRemove, onAdvance }: Pla
         inactiveZone={0.2}
         borderWidth={2}
       />
-      <section className="panel glow-card-content">
+      <section className="panel glow-card-content playlist-panel-content">
         <div className="panel-header">
           <h2>Playlist</h2>
           {isHost ? (
@@ -46,6 +46,7 @@ export function PlaylistPanel({ items, isHost, onAdd, onRemove, onAdvance }: Pla
               text: index === 0 ? `Now: ${title}` : title
             };
           })}
+          canRemoveTag={() => isHost}
           onTagAdd={(url) => {
             onAdd(url);
           }}
