@@ -141,7 +141,7 @@ export function RoomPage() {
           />
         </div>
         <div className="player-column">
-          <PlayerContainer embed={currentEmbed} onAdapterReady={setAdapter} />
+          <PlayerContainer key={connection.currentItem?.id ?? "empty"} embed={currentEmbed} onAdapterReady={setAdapter} />
           {connection.error ? <div className="error-banner">{connection.error}</div> : null}
           {currentEmbed && !["direct", "youtube", "vimeo", "dailymotion", "twitch"].includes(currentEmbed.source) ? (
             <div className="notice-banner">Some sites may not sync exactly.</div>

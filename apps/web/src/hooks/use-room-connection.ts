@@ -29,6 +29,10 @@ const EMPTY_PLAYBACK: PlaybackState = {
   updatedAt: 0
 };
 
+function didCurrentItemChange(previous: PlaylistItem | null, next: PlaylistItem | null) {
+  return previous?.id !== next?.id;
+}
+
 function reconcileCurrentItem(previous: PlaylistItem | null, next: PlaylistItem | null) {
   if (!previous || !next) {
     return next;
@@ -45,11 +49,16 @@ export function useRoomConnection({ roomId, username, avatarSeed }: UseRoomConne
   const [playback, setPlayback] = useState<PlaybackState>(EMPTY_PLAYBACK);
   const [error, setError] = useState<string | null>(null);
   const usersRef = useRef<RoomUser[]>([]);
+  const currentItemRef = useRef<PlaylistItem | null>(null);
   const playbackRef = useRef<PlaybackState>(EMPTY_PLAYBACK);
 
   useEffect(() => {
     usersRef.current = users;
   }, [users]);
+
+  useEffect(() => {
+    currentItemRef.current = currentItem;
+  }, [currentItem]);
 
   useEffect(() => {
     playbackRef.current = playback;
@@ -76,12 +85,17 @@ export function useRoomConnection({ roomId, username, avatarSeed }: UseRoomConne
       setSnapshot((prev) => (prev ? { ...prev, playback: nextPlayback } : prev));
     };
     const onPlaylistUpdated = (items: PlaylistItem[], nextCurrentItem: PlaylistItem | null) => {
+      const shouldResetPlayback = didCurrentItemChange(currentItemRef.current, nextCurrentItem);
       setPlaylist(items);
       setCurrentItem((prev) => reconcileCurrentItem(prev, nextCurrentItem));
+      if (shouldResetPlayback) {
+        setPlayback(EMPTY_PLAYBACK);
+      }
       setSnapshot((prev) => {
         if (prev) {
           return {
             ...prev,
+            playback: shouldResetPlayback ? EMPTY_PLAYBACK : prev.playback,
             playlist: items,
             currentItem: reconcileCurrentItem(prev.currentItem, nextCurrentItem)
           };
@@ -92,7 +106,7 @@ export function useRoomConnection({ roomId, username, avatarSeed }: UseRoomConne
           roomName: generateRoomName(roomId),
           hostUserId: null,
           currentItem: nextCurrentItem,
-          playback: playbackRef.current,
+          playback: shouldResetPlayback ? EMPTY_PLAYBACK : playbackRef.current,
           playlist: items,
           users: usersRef.current,
           chat: []
