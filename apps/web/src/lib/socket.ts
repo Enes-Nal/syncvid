@@ -24,6 +24,11 @@ const serverUrl = resolveServerUrl();
 export const socket = serverUrl
   ? io(serverUrl, {
       autoConnect: false,
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1_000,
+      reconnectionDelayMax: 5_000,
+      timeout: 60_000,
       transports: ["polling", "websocket"]
     })
   : null;
