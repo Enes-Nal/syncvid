@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "npm install",
-  "buildCommand": "npm run build -w @syncweb/web",
+  "buildCommand": "npm run build -w @syncweb/shared && npm run build -w @syncweb/web",
   "outputDirectory": "apps/web/dist",
   "rewrites": [
     {
