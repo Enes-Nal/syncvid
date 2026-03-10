@@ -14,10 +14,7 @@
       "@syncweb/shared/*": [
         "../../packages/shared/src/*"
       ]
-    },
-    "types": [
-      "vite/client"
-    ]
+    }
   },
   "include": [
     "src",
