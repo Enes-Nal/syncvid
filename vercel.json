@@ -3,7 +3,7 @@
   "framework": "vite",
   "installCommand": "cd ../.. && npm install --include=dev --workspaces --include-workspace-root",
   "buildCommand": "cd ../.. && npm run build -w @syncweb/web",
-  "outputDirectory": "dist",
+  "outputDirectory": "apps/web/dist",
   "rewrites": [
     {
       "source": "/(.*)",
