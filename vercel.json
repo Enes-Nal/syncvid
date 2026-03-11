@@ -2,8 +2,8 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
   "installCommand": "cd ../.. && npm install --include=dev --workspaces --include-workspace-root",
-  "buildCommand": "cd ../.. && npm run build -w @syncweb/web",
-  "outputDirectory": "apps/web/dist",
+  "buildCommand": "ROOT=\"$PWD\"; cd ../.. && npm run build -w @syncweb/web && REPO=\"$PWD\" && if [ \"$ROOT\" != \"$REPO/apps/web\" ]; then mkdir -p \"$ROOT/dist\" && cp -R \"$REPO/apps/web/dist/.\" \"$ROOT/dist/\"; fi",
+  "outputDirectory": "dist",
   "rewrites": [
     {
       "source": "/(.*)",
